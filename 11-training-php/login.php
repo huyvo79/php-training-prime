@@ -3,6 +3,7 @@
 session_start();
 
 require_once 'models/UserModel.php';
+require_once 'redis.php';
 $userModel = new UserModel();
 
 
@@ -15,16 +16,51 @@ if (!empty($_POST['submit'])) {
     if ($user = $userModel->auth($users['username'], $users['password'])) {
         //Login successful
         $_SESSION['id'] = $user[0]['id'];
-
         $_SESSION['message'] = 'Login successful';
+
+        // Remember Me - Save cookie to file
+        if (!empty($_POST['remember'])) {
+            $cookieDir = __DIR__ . '/cookies';
+            if (!is_dir($cookieDir)) {
+                mkdir($cookieDir, 0755, true);
+            }
+
+            // Tìm key cũ của user (nếu có)
+            $userId = $user[0]['id'];
+            $key = null;
+            foreach (glob($cookieDir . '/*') as $file) {
+                if (file_get_contents($file) == $userId) {
+                    $key = basename($file);
+                    break;
+                }
+            }
+
+            // Nếu chưa có key thì tạo mới
+            if (!$key) {
+                do {
+                    $key = bin2hex(random_bytes(16));
+                    $filePath = $cookieDir . '/' . $key;
+                } while (file_exists($filePath));
+                file_put_contents($filePath, $userId);
+                // Lưu lên Redis
+                $redis->set($key, $userId);
+            } else {
+                // Nếu đã có key, đảm bảo Redis cũng có
+                if (!$redis->exists($key)) {
+                    $redis->set($key, $userId);
+                }
+            }
+
+            setcookie('remember_key', $key, time() + (86400 * 30), "/");
+        }
+
         header('location: list_users.php');
+        exit;
     }else {
         //Login failed
         $_SESSION['message'] = 'Login failed';
     }
-
 }
-
 ?>
 <!DOCTYPE html>
 <html>
