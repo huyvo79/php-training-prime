@@ -9,10 +9,8 @@ $user = NULL; //Add new user
 $id = NULL;
 
 if (
-    !empty($_POST['id']) &&
-    !empty($_POST['csrf']) &&
-    isset($_SESSION['csrf']) &&        
-    hash_equals($_SESSION['csrf'], $_POST['csrf']) 
+    !empty($_POST['id']) 
+   
 ) {
     $id = $_POST['id'];
     $userModel->deleteUserById($id);

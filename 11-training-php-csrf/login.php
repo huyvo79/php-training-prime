@@ -5,7 +5,6 @@ session_start();
 require_once 'models/UserModel.php';
 $userModel = new UserModel();
 
-
 if (!empty($_POST['submit'])) {
     $users = [
         'username' => $_POST['username'],
@@ -16,8 +15,14 @@ if (!empty($_POST['submit'])) {
         //Login successful
         $_SESSION['id'] = $user[0]['id'];
 
+        // Tạo browser token
+        $browser_token = bin2hex(random_bytes(32));
+        $_SESSION['browser_token'] = $browser_token;
+        setcookie('browser_token', $browser_token, time() + 3600, '/', '', false, true);
+
         $_SESSION['message'] = 'Login successful';
         header('location: list_users.php');
+        exit;
     }else {
         //Login failed
         $_SESSION['message'] = 'Login failed';

@@ -1,6 +1,16 @@
 <?php
 // Start the session
 session_start();
+if (
+    !isset($_SESSION['id']) ||
+    !isset($_SESSION['browser_token']) ||
+    !isset($_COOKIE['browser_token']) ||
+    $_SESSION['browser_token'] !== $_COOKIE['browser_token']
+) {
+    // Không hợp lệ, chuyển về trang đăng nhập
+    header('Location: login.php');
+    exit;
+}
 
 require_once 'models/UserModel.php';
 $userModel = new UserModel();
@@ -62,7 +72,7 @@ $users = $userModel->getUsers($params);
                                     <i class="fa fa-eye" aria-hidden="true" title="View"></i>
                                 </a>
                                 <form action="delete_user.php" method="post" >
-                                    <input type="hidden" name="id" value="<?php echo $user['id'] ?>">
+                                    <input type="hidden" name="id" value="<?php echo $user['id']?>">
                                     <input type="hidden" name="csrf" value="<?php echo $csrf ?>">
                                     <button type="submit" >
                                          <i class="fa fa-eraser" aria-hidden="true" title="Delete"></i>
