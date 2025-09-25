@@ -25,10 +25,15 @@ RUN apt-get update \
         exif \
         pdo_mysql \
         mysqli \
-        && docker-php-ext-enable pdo_mysql
+    && docker-php-ext-enable pdo_mysql
 
+# Cài đặt và bật xdebug
 RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
+
+# Cài đặt và bật redis
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 ENV APACHE_DOCUMENT_ROOT /var/www/html
 
@@ -38,11 +43,9 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=$COMPOSER_VERSION
 
 RUN a2enmod rewrite
+RUN a2enmod headers
 
 RUN useradd -ms /bin/bash -u 1000 app
 
-RUN a2enmod headers
-
 #COPY start /usr/local/bin/
-
 #CMD [ "start" ]

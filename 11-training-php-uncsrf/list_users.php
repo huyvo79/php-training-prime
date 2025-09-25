@@ -10,11 +10,6 @@ if (!empty($_GET['keyword'])) {
     $params['keyword'] = $_GET['keyword'];
 }
 
-if (!isset($_SESSION['csrf'])) {
-    $_SESSION['csrf'] = bin2hex(random_bytes(32));
-}
-$csrf = htmlspecialchars($_SESSION['csrf']);
-
 $users = $userModel->getUsers($params);
 ?>
 <!DOCTYPE html>
@@ -61,14 +56,9 @@ $users = $userModel->getUsers($params);
                                 <a href="view_user.php?id=<?php echo $user['id'] ?>">
                                     <i class="fa fa-eye" aria-hidden="true" title="View"></i>
                                 </a>
-                                <form action="delete_user.php" method="post" >
-                                    <input type="hidden" name="id" value="<?php echo $user['id'] ?>">
-                                    <input type="hidden" name="csrf" value="<?php echo $csrf ?>">
-                                    <button type="submit" >
-                                         <i class="fa fa-eraser" aria-hidden="true" title="Delete"></i>
-                                    </button>
-                                </form>
-                              
+                                <a href="delete_user.php?id=<?php echo $user['id'] ?>">
+                                    <i class="fa fa-eraser" aria-hidden="true" title="Delete"></i>
+                                </a>
                             </td>
                         </tr>
                     <?php } ?>
