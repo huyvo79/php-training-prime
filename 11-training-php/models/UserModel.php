@@ -2,17 +2,20 @@
 
 require_once 'BaseModel.php';
 
-class UserModel extends BaseModel {
+class UserModel extends BaseModel
+{
 
-    public function findUserById($id) {
-        $sql = 'SELECT * FROM users WHERE id = '.$id;
+    public function findUserById($id)
+    {
+        $sql = 'SELECT * FROM users WHERE id = ' . $id;
         $user = $this->select($sql);
 
         return $user;
     }
 
-    public function findUser($keyword) {
-        $sql = 'SELECT * FROM users WHERE user_name LIKE %'.$keyword.'%'. ' OR user_email LIKE %'.$keyword.'%';
+    public function findUser($keyword)
+    {
+        $sql = 'SELECT * FROM users WHERE user_name LIKE %' . $keyword . '%' . ' OR user_email LIKE %' . $keyword . '%';
         $user = $this->select($sql);
 
         return $user;
@@ -24,9 +27,10 @@ class UserModel extends BaseModel {
      * @param $password
      * @return array
      */
-    public function auth($userName, $password) {
+    public function auth($userName, $password)
+    {
         $md5Password = md5($password);
-        $sql = 'SELECT * FROM users WHERE name = "' . $userName . '" AND password = "'.$md5Password.'"';
+        $sql = 'SELECT * FROM users WHERE name = "' . $userName . '" AND password = "' . $md5Password . '"';
 
         $user = $this->select($sql);
         return $user;
@@ -37,8 +41,9 @@ class UserModel extends BaseModel {
      * @param $id
      * @return mixed
      */
-    public function deleteUserById($id) {
-        $sql = 'DELETE FROM users WHERE id = '.$id;
+    public function deleteUserById($id)
+    {
+        $sql = 'DELETE FROM users WHERE id = ' . $id;
         return $this->delete($sql);
 
     }
@@ -48,10 +53,11 @@ class UserModel extends BaseModel {
      * @param $input
      * @return mixed
      */
-    public function updateUser($input) {
+    public function updateUser($input)
+    {
         $sql = 'UPDATE users SET 
-                 name = "' . mysqli_real_escape_string(self::$_connection, $input['name']) .'", 
-                 password="'. md5($input['password']) .'"
+                 name = "' . mysqli_real_escape_string(self::$_connection, $input['name']) . '", 
+                 password="' . md5($input['password']) . '"
                 WHERE id = ' . $input['id'];
 
         $user = $this->update($sql);
@@ -64,9 +70,10 @@ class UserModel extends BaseModel {
      * @param $input
      * @return mixed
      */
-    public function insertUser($input) {
+    public function insertUser($input)
+    {
         $sql = "INSERT INTO `app_web1`.`users` (`name`, `password`) VALUES (" .
-                "'" . $input['name'] . "', '".md5($input['password'])."')";
+            "'" . $input['name'] . "', '" . md5($input['password']) . "')";
 
         $user = $this->insert($sql);
 
@@ -98,38 +105,33 @@ class UserModel extends BaseModel {
     //     return $users;
     // }
 
-    public function getUsers($params = []) {
-    // Nếu có keyword -> dùng prepared statement cho LIKE
-    if (!empty($params['keyword'])) {
-        $keyword = $params['keyword'];
-        $kw = "%{$keyword}%";
+    public function getUsers($params = [])
+    {
+        if (!empty($params['keyword'])) {
+            $keyword = $params['keyword'];
+            $kw = "%{$keyword}%";
 
-        // Chuẩn bị statement
-        $stmt = self::$_connection->prepare("SELECT id, name, fullname, email, type FROM users WHERE name LIKE ?");
-        if ($stmt === false) {
-            // xử lý lỗi chuẩn (không in lỗi DB ra user trong production)
-            throw new Exception('Prepare failed: ' . self::$_connection->error);
+            $stmt = self::$_connection->prepare("SELECT id, name, fullname, email, type FROM users WHERE name LIKE ?");
+            if ($stmt === false) {
+                throw new Exception('Prepare failed: ' . self::$_connection->error);
+            }
+
+            $stmt->bind_param('s', $kw);
+            $stmt->execute();
+
+            $result = $stmt->get_result();
+            $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+
+            $stmt->close();
+
+            return $rows;
+        } else {
+            $res = self::$_connection->query("SELECT id, name, fullname, email, type FROM users");
+            if ($res === false) {
+                throw new Exception('Query failed: ' . self::$_connection->error);
+            }
+            return $res->fetch_all(MYSQLI_ASSOC);
         }
-
-        // bind và execute
-        $stmt->bind_param('s', $kw);
-        $stmt->execute();
-
-        // lấy kết quả dưới dạng mảng associative
-        $result = $stmt->get_result();
-        $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-
-        $stmt->close();
-
-        return $rows;
-    } else {
-        // Không có keyword: lấy tất cả (đơn giản)
-        $res = self::$_connection->query("SELECT id, name, fullname, email, type FROM users");
-        if ($res === false) {
-            throw new Exception('Query failed: ' . self::$_connection->error);
-        }
-        return $res->fetch_all(MYSQLI_ASSOC);
     }
-}
 
 }
